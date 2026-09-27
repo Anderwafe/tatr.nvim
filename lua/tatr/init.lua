@@ -8,7 +8,7 @@ M.setup = function (opts)
     vim.api.nvim_create_user_command('Tatr', 
     function(cmdopts)
         local wsp = M.find_workspace()
-        vim.print(cmdopts)
+        -- vim.print(cmdopts)
         if wsp == nil then
             local msg = 'Cannot find tatr tasks folder in all of the parents directory. You should create one (for example with tatr tool: "tatr init")'
             vim.notify(msg, vim.log.levels.ERROR)
@@ -36,9 +36,10 @@ M.setup = function (opts)
             end
             local msg = 'Tatr task id format is correct!'
             vim.notify(msg, vim.log.levels.INFO)
+
             return
         else
-            local msg = 'Unknown command specified'
+            local msg = 'Unknown subcommand specified'
             vim.notify(msg, vim.log.levels.ERROR)
             error(msg, vim.log.levels.ERROR)
             return
@@ -53,13 +54,46 @@ M.find_workspace = function (buf)
     -- local directory = vim.api.nvim_buf_get_name(buf or 0)
     -- local Workspace = require("lazydev.workspace")
     -- local ws = Workspace.find({ path = fname })
-    root = vim.fs.find('tasks', { type = 'directory', upward = true })
+    local root = vim.fs.find('tasks', { type = 'directory', upward = true })
 
     if root != {} then
-        return root
+        return root[1]
     else
         return nil
     end
+end
+
+M.find_task_by_id = function(id)
+    local tws = M.find_workspace()
+    if tws == nil then
+        local msg = 'Cannot find tatr tasks folder in all of the parents directory. You should create one (for example with tatr tool: "tatr init")'
+        vim.notify(msg, vim.log.levels.ERROR)
+        error(msg, vim.log.levels.ERROR)
+        return nil
+    end
+    if not HUID.IsValid(id) then
+        local msg = 'Tatr task id format is incorrect! expected: [0-9]{8}-[0-9]{6}(-[a-zA-Z0-9\\-]*)?'
+        vim.notify(msg, vim.log.levels.ERROR)
+        error(msg, vim.log.levels.ERROR)
+        return nil
+    end
+    local task_fld = vim.fs.joinpath(tws, id)
+    local task_fld_stat = vim.uv.fs_stat(task_fld)
+    if not task_fld_stat or bit.band(task_fld_stat.mode, 61440) ~= 16384 then
+        local msg = 'Task is not found in tasks folder'
+        vim.notify(msg, vim.log.levels.ERROR)
+        error(msg, vim.log.levels.ERROR)
+        return nil
+    end
+    local task_md = vim.fs.joinpath(task_fld, 'TASK.md')
+    local task_md_stat = vim.uv.fs_stat(task_md)
+    if not task_md_stat or bit.band(task_md_stat.mode, 61440) ~= 32768 then
+        local msg = 'Task is not found in tasks folder'
+        vim.notify(msg, vim.log.levels.ERROR)
+        error(msg, vim.log.levels.ERROR)
+        return nil
+    end
+    return { folder = task_fld, task = task_md }
 end
 
 return M
