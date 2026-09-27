@@ -1,6 +1,6 @@
 # Implement HUID checker without regex
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 100
 - TAGS: HUID
 
