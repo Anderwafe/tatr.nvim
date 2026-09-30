@@ -22,7 +22,7 @@ M.setup = function (opts)
             return
         end
         if cmdopts.fargs[1] == 'insert' then
-            if #cmdopts.fargs != 2 then
+            if #cmdopts.fargs ~= 2 then
                 local msg = 'Tatr insert expects task id as an argument'
                 vim.notify(msg, vim.log.levels.ERROR)
                 -- error(msg, vim.log.levels.ERROR)
@@ -60,7 +60,7 @@ M.find_workspace = function (buf)
     -- local ws = Workspace.find({ path = fname })
     local root = vim.fs.find('tasks', { type = 'directory', upward = true })
 
-    if root != {} then
+    if root ~= {} then
         return root[1]
     else
         return nil
