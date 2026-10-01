@@ -48,7 +48,18 @@ M.setup = function (opts)
             -- error(msg, vim.log.levels.ERROR)
             return
         end
-    end, { nargs = '*' })
+    end, { nargs = '*',
+    complete = function(ArgLead, CmdLine, CursorPos)
+        local wsp = M.find_workspace()
+        if wsp == nil then
+            local msg = 'Cannot find tatr tasks folder in all of the parents directory. You should create one (for example with tatr tool: "tatr init")'
+            vim.notify(msg, vim.log.levels.ERROR)
+            return
+        end
+        
+        return vim.iter(vim.fs.dir(wsp)):map(function(name, type) if type == 'directory' then return name end end):totable()
+    end,
+})
 end
 
 --- Checks if the current buffer is in a tasks workspace
