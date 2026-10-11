@@ -42,6 +42,40 @@ M.setup = function (opts)
             local textToInsert = vim.bo.commentstring:gsub('%%s', 'TASK(' .. cmdopts.fargs[2] .. '): ' .. taskInfo:sub(taskInfo:find(' ')+1))
             vim.api.nvim_buf_set_lines(0, linenum-1, linenum-1, false, {textToInsert})
             return
+        elseif cmdopts.fargs[1] == 'new' then
+            local taskTitle = vim.iter(cmdopts.fargs):skip(1):join(' ')
+            if taskTitle == '' then taskTitle = 'New task' end
+            
+            local taskID = getHUID().Generate()
+            local taskCollision = M.find_task_by_id(taskID)
+            if taskCollision ~= nil then
+                vim.uv.sleep(1000)
+                taskID = getHUID().Generate()
+                taskCollision = M.find_task_by_id(taskID)
+                if taskCollision ~= nil then
+                    local msg = 'New task id ('..taskID..') colliding with existed task. Check your time settings or you trying to create tasks too fast.'
+                    vim.notify(msg, vim.log.levels.ERROR)
+                    return
+                end
+            end
+            local taskData = '# '..taskTitle..'\n\n'
+            taskData = taskData..'- STATUS: OPEN\n'
+            taskData = taskData..'- PRIORITY: 100\n'
+            taskData = taskData..'- TAGS:\n\n'
+            local taskPath = vim.fs.joinpath(wsp, taskID)
+            local resultBuf = vim.uv.fs_mkdir(taskPath, tonumber('755', 8))
+            if resultBuf ~= true then
+                local msg = 'Failed to create task directory: '..vim.inspect(resultBuf)
+                vim.notify(msg, vim.log.levels.ERROR)
+                return
+            end
+            if vim.fn.writefile(taskData, vim.fs.joinpath(taskPath, 'TASK.md'), 's') ~= 0 then
+                local msg = 'Failed to create task file'
+                vim.notify(msg, vim.log.levels.ERROR)
+                return
+            end
+            local msg = 'Created task with ID '..taskID
+            vim.notify(msg, vim.log.levels.INFO)
         else
             local msg = 'Unknown subcommand specified'
             vim.notify(msg, vim.log.levels.ERROR)
