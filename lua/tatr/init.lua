@@ -57,7 +57,24 @@ M.setup = function (opts)
             return
         end
         
-        return vim.iter(vim.fs.dir(wsp)):map(function(name, type) if type == 'directory' then return name end end):totable()
+        local subcommands = {'insert', 'new'}
+
+        if CmdLine:match('Tatr $') then
+            return subcommands
+        end
+        if CmdLine:match('Tatr %l+$') then
+            return vim.iter(subcommands):map(function(subcmd) if subcmd:sub(1, ArgLead:len()):match(ArgLead) then return subcmd end end):totable()
+        end
+
+        local tasksIter = vim.iter(vim.fs.dir(wsp)):map(function(name, type) if type == 'directory' then return name end end)
+        if CmdLine:match('Tatr insert $') then
+            return tasksIter:totable()
+        end
+        if CmdLine:match('Tatr insert [%w-]+$') then
+            return tasksIter:map(function(taskName) if taskName:sub(1, ArgLead:len()):match(ArgLead) then return taskName end end):totable()
+        end
+
+        return {}
     end,
 })
 end
