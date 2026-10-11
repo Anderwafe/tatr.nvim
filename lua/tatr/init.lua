@@ -1,6 +1,6 @@
-require'tatr/HUID'
-
 local M = {}
+
+local getHUID = function() return require'tatr/HUID' end
 
 -- ---@param opts? tatr.Config
 M.setup = function (opts)
@@ -28,7 +28,7 @@ M.setup = function (opts)
                 -- error(msg, vim.log.levels.ERROR)
                 return
             end
-            if not HUID.IsValid(cmdopts.fargs[2]) then
+            if not getHUID().IsValid(cmdopts.fargs[2]) then
                 local msg = 'Tatr task id format is incorrect! expected: [0-9]{8}-[0-9]{6}(-[a-zA-Z0-9\\-]*)?'
                 vim.notify(msg, vim.log.levels.ERROR)
                 -- error(msg, vim.log.levels.ERROR)
@@ -78,6 +78,8 @@ M.find_workspace = function (buf)
     end
 end
 
+--- A non-recursive task finder function
+-- 
 M.find_task_by_id = function(id)
     local tws = M.find_workspace()
     if tws == nil then
@@ -86,7 +88,7 @@ M.find_task_by_id = function(id)
         -- error(msg, vim.log.levels.ERROR)
         return nil
     end
-    if not HUID.IsValid(id) then
+    if not getHUID().IsValid(id) then
         local msg = 'Tatr task id format is incorrect! expected: [0-9]{8}-[0-9]{6}(-[a-zA-Z0-9\\-]*)?'
         vim.notify(msg, vim.log.levels.ERROR)
         -- error(msg, vim.log.levels.ERROR)
